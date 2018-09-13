@@ -1,6 +1,7 @@
 import sys
 import socket
 import random
+import toy_des as des
 
 #read user input and set up connections
 def getCommand():
@@ -42,10 +43,22 @@ def getCommand():
 #sets up a connection, encrypts the file and sends to the
 #given address
 def sendFile(file):
+	#Send name of file first
+	#ENCRYPT
+	sock.sendall(file.name)
+
+	#Wait for acknowledgement
+	ack = sock.recv(1024)
+	#DECRYPT
+	if ack != "ACK": return
+
+	#Send the rest
 	data = None
 	while data != "":
 		data = file.read(1024)
+		#ENCRYPT
 		sock.sendall(data)
+	print "Complete"
 
 #listens on a port for a connection
 #receives a file, decrypts and saves.
@@ -54,12 +67,24 @@ def recvFile():
 	fd, addr = sock.accept()
 	print "Conncetion received from", addr
 
+	#receive first packet (filename)
+	filename = fd.recv(1024)
+	#DECRYPT
+	#open the file
+	file = open(filename, "a")
+
+	#Send Acknowledgement
+	#ENCRYPT
+	fd.sendall("ACK")
+
 	data = None
 	while data != "":
 		data = fd.recv(1024)
-		print data
+		#DECRYPT
+		file.write(data)
 
 	fd.close()
+	print "Received file:", filename
 
 
 
