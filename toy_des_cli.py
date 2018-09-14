@@ -2,34 +2,13 @@ import sys
 import socket
 import random
 import toy_des as des
-import binascii
 
-#convert bytes to a string of bits
-def getBits(str):
-	size = len(str)
-	binary = bin(int(binascii.hexlify(str), 16))
-	#remove the "0b"
-	bits = binary[2:]
-	#add leading 0s
-	while len(bits) < size*8:
-		bits = "0" + bits
-	return bits
-
-#convert a string of bits to bytes
-#bits must be a multiple of 8
-def getBytes(binary):
-	#check that we have the correct amount of bits
-	if len(binary) % 8 != 0:
-		raise ValueError("bits must come in multiple of 8")
-
-	#add "0b"
-	binary = "0b" + binary
-	hex = "%x" % int(binary, 2)
-	if len(hex) % 2 != 0:
-		hex = "0" + hex
-	return binascii.unhexlify(hex)
-
-
+def getKey():
+	key = bin(int(random.random() * 1024))
+	key = key[2:]
+	while len(key) < 8:
+		key = "0" + key
+	return key
 
 #read user input and set up connections
 def getCommand():
@@ -116,11 +95,10 @@ def recvFile():
 	print "Received file:", filename
 
 
-
 ###MAIN###
-#sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+key = getKey()
 #getCommand()
-#sock.close()
+sock.close()
 
-print getBytes("00000000")
 
