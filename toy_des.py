@@ -19,29 +19,6 @@ S1 = [["00", "01", "10", "11"],
 	  ["10", "00", "01", "11"]]
 
 
-#returns a permutation of the bits according to the array permutation
-#arguments must have same length
-def permuteBits(bits, permutation):
-	#check lengths
-	if len(bits) != len(permutation):
-		raise ValueError("length does not match")
-
-	newString = ""
-	for p in permutation:
-		newString += bits[p-1]
-	return newString
-
-
-#takes 4-bit input and returns 2-bits based on the sbox
-def substituteBits(bits, sbox):
-	#calculate row using first and last bits
-	row = int("0b" + bits[0] + bits[3], 2)
-	#calculate col using middle bits
-	col = int("0b" + bits[1] + bits[2], 2)
-
-	return sbox[row][col]
-
-
 #convert bytes to a string of bits
 def getBits(str):
 	size = len(str)
@@ -67,6 +44,60 @@ def getBytes(binary):
 	if len(hex) % 2 != 0:
 		hex = "0" + hex
 	return binascii.unhexlify(hex)
+
+#returns a permutation of the bits according to the array permutation
+def permuteBits(bits, permutation):
+	newString = ""
+	for p in permutation:
+		newString += bits[p-1]
+	return newString
+
+
+#takes 4-bit input and returns 2-bits based on the sbox
+def substituteBits(bits, sbox):
+	#check length
+	if len(bits) != 4:
+		raise ValueError("Must enter 4 bits")
+
+	#calculate row using first and last bits
+	row = int("0b" + bits[0] + bits[3], 2)
+	#calculate col using middle bits
+	col = int("0b" + bits[1] + bits[2], 2)
+
+	return sbox[row][col]
+
+#Shifts the bits by amount
+#positive amount is left shift, negative is right
+def shiftBits(bits, amount):
+	shifted = ""
+	for i in range(len(bits)):
+		i = (i + amount) % len(bits)
+		shifted += bits[i]
+	return shifted
+
+#takes 10-bit key and returns 8-bit keys (k1, k2)
+def getSubKeys(key):
+	#Permute
+	key = permuteBits(key, P10)
+	#split in half
+	left = key[:5]
+	right = key[5:]
+	#left shift each
+	left = shiftBits(left, 1)
+	right = shiftBits(right, 1)
+
+	#Combine, permute and get k1
+	k1 = left + right
+	k1 = permuteBits(k1, P10to8)
+
+	#shift again, combine, permute and get k2
+	left = shiftBits(left, 1)
+	right = shiftBits(right, 1)
+	k2 = left + right
+	k2 = permuteBits(k2, P10to8)
+
+	return k1, k2
+
 
 
 #def encrypt(data, key):

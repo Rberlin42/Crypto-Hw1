@@ -6,7 +6,7 @@ import toy_des as des
 def getKey():
 	key = bin(int(random.random() * 1024))
 	key = key[2:]
-	while len(key) < 8:
+	while len(key) < 10:
 		key = "0" + key
 	return key
 
@@ -98,6 +98,8 @@ def recvFile():
 ###MAIN###
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 key = getKey()
+print key
+print des.getSubKeys(key)
 #getCommand()
 sock.close()
 
