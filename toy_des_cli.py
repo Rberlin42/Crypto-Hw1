@@ -2,13 +2,7 @@ import sys
 import socket
 import random
 import toy_des as des
-
-def getKey():
-	key = bin(int(random.random() * 1024))
-	key = key[2:]
-	while len(key) < 10:
-		key = "0" + key
-	return key
+import codecs
 
 #read user input and set up connections
 def getCommand():
@@ -26,7 +20,7 @@ def getCommand():
 		#get the file
 		filename = raw_input("file: ")
 		try:
-			file = open(filename)
+			file = open(filename, "rb")
 		except:
 			print "Could not open file:", filename
 			getCommand()
@@ -52,20 +46,23 @@ def getCommand():
 def sendFile(file):
 	#Send name of file first
 	#ENCRYPT
-	sock.sendall(file.name)
+	cypher = des.encrypt(file.name, key)
+	sock.sendall(cypher)
 
 	#Wait for acknowledgement
 	ack = sock.recv(1024)
-	#DECRYPT
 	if ack != "ACK": return
 
 	#Send the rest
 	data = None
 	while data != "":
-		data = getBits(file.read(1024))
+		data = file.read(1024)
+
+		if len(data) == 0: break
 		#ENCRYPT
-		data = "0b" + data
-		sock.sendall(data)
+		cypher = des.encrypt(data, key)
+
+		sock.sendall(cypher)
 	print "Complete"
 
 #listens on a port for a connection
@@ -76,19 +73,21 @@ def recvFile():
 	print "Conncetion received from", addr
 
 	#receive first packet (filename)
-	filename = fd.recv(1024)
+	cypher = fd.recv(1024)
 	#DECRYPT
+	filename = des.decrypt(cypher, key)
 	#open the file
-	file = open(filename, "a")
+	file = codecs.open(filename, "a", "utf-8")
 
 	#Send Acknowledgement
-	#ENCRYPT
 	fd.sendall("ACK")
 
 	data = None
 	while data != "":
-		data = fd.recv(1024)
+		cypher = fd.recv(1024)
+		if len(cypher) == 0: break
 		#DECRYPT
+		data = des.decrypt(cypher, key)
 		file.write(data)
 
 	fd.close()
@@ -97,10 +96,6 @@ def recvFile():
 
 ###MAIN###
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-key = getKey()
-print key
-print des.getSubKeys(key)
-#getCommand()
+key = "1100100110"
+getCommand()
 sock.close()
-
-

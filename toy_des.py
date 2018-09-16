@@ -1,5 +1,3 @@
-import binascii
-
 #permutations
 P10 = [3, 5, 2, 7, 4, 10, 1, 9, 8, 6]
 Pinital = [2, 6, 3, 1, 4, 8, 5, 7]
@@ -21,29 +19,22 @@ S1 = [["00", "01", "10", "11"],
 
 #convert bytes to a string of bits
 def getBits(str):
-	size = len(str)
-	binary = bin(int(binascii.hexlify(str), 16))
-	#remove the "0b"
-	bits = binary[2:]
-	#add leading 0s
-	while len(bits) < size*8:
-		bits = "0" + bits
-	return bits
+	binary = ""
+	for byte in str:
+		b = bin(ord(byte))[2:]
+		while len(b) < 8:
+			b = "0" + b
+		binary += b
+	return binary
 
 
 #convert a string of bits to bytes
-#bits must be a multiple of 8
 def getBytes(binary):
-	#check that we have the correct amount of bits
-	if len(binary) % 8 != 0:
-		raise ValueError("bits must come in multiple of 8")
+	b = ""
+	for i in range(0, len(binary), 8):
+		b += unichr(int("0b" + binary[i:i+8], 2))
+	return b
 
-	#add "0b"
-	binary = "0b" + binary
-	hex = "%x" % int(binary, 2)
-	if len(hex) % 2 != 0:
-		hex = "0" + hex
-	return binascii.unhexlify(hex)
 
 #returns a permutation of the bits according to the array permutation
 def permuteBits(bits, permutation):
@@ -66,6 +57,7 @@ def substituteBits(bits, sbox):
 
 	return sbox[row][col]
 
+
 #Shifts the bits by amount
 #positive amount is left shift, negative is right
 def shiftBits(bits, amount):
@@ -74,6 +66,7 @@ def shiftBits(bits, amount):
 		i = (i + amount) % len(bits)
 		shifted += bits[i]
 	return shifted
+
 
 #takes 10-bit key and returns 8-bit keys (k1, k2)
 def getSubKeys(key):
@@ -99,9 +92,103 @@ def getSubKeys(key):
 	return k1, k2
 
 
+#computes the xor of two binary strings
+#must be same length
+def XOR(b1, b2):
+	#check length
+	if len(b1) != len(b2):
+		raise ValueError("bit strings must be same length")
 
-#def encrypt(data, key):
+	#compute the xor
+	xor = int("0b" + b1, 2) ^ int("0b" + b2, 2)
+
+	#convert back to binary
+	result = bin(xor)
+	#remove "0b"
+	result = result[2:]
+	#add leading 0s
+	while len(result) < len(b1):
+		result = "0" + result
+
+	return result
 
 
-#def decrypt(data, key):
+#F function
+#must be 4-bit input and 8-bit key
+def F(bits, key):
+	#check lengths of inputs
+	if len(bits) != 4:
+		raise ValueError("must be 4-bit input")
+	if len(key) != 8: 
+		raise ValueError("must be 8-bit key")
+
+	#expand/permute bits
+	bits = permuteBits(bits, P4expansion)
+	#xor with key
+	bits = XOR(bits, key)
+	#split in half
+	left = bits[:4]
+	right = bits[4:]
+	#put them through the Sboxes
+	left = substituteBits(left, S0)
+	right = substituteBits(right, S1)
+
+	#combine them back and permute
+	return permuteBits(left+right, P4)
+
+
+#DES encrytion or decryption on an 8-bit block of data
+#direction is either "ENCRYPT" or "DECRYPT"
+def toy_des(data, key, direction):
+	#check length of data
+	if len(data) != 8:
+		raise ValueError("block must be 8 bits")
+
+	#create subkeys from key
+	if direction == "ENCRYPT":
+		k1, k2 = getSubKeys(key)
+	elif direction == "DECRYPT":
+		k2, k1 = getSubKeys(key)
+	else:
+		raise ValueError("direction must either be \"ENCRYPT\" or \"DECRYPT\"")
+
+	#initial permutation
+	bits = permuteBits(data, Pinital)
+	#split in half
+	left1 = bits[:4]
+	right1 = bits[4:]
+	
+	#Compute round one
+	right2 = XOR(left1, F(right1, k1))
+	left2 = right1
+	#Compute round two
+	result = XOR(left2, F(right2, k2)) + right2
+
+	#inverse initial perm
+	result = permuteBits(result, Pinverse)
+
+	return result
+
+
+#Input any amount of plaintext and returns the cyphertext
+def encrypt(data, key):
+	#convert to binary data
+	plaintext = getBits(data)
+
+	cyphertext = ""
+	#loop through bits and encrypt 8-bit blocks at a time
+	for i in range(0, len(plaintext), 8):
+		cyphertext += toy_des(plaintext[i:i+8], key, "ENCRYPT")
+
+	return cyphertext
+
+#takes input of binary cyphertext and returns plaintext in bytes
+def decrypt(cyphertext, key):
+	#loop through bits and decrypt 8-bit blocks at a time
+	plaintext = ""
+	for i in range(0, len(cyphertext), 8):
+		plaintext += toy_des(cyphertext[i:i+8], key, "DECRYPT")
+
+	data = getBytes(plaintext)
+	return data
 
