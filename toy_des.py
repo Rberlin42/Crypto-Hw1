@@ -17,25 +17,6 @@ S1 = [["00", "01", "10", "11"],
 	  ["10", "00", "01", "11"]]
 
 
-#convert bytes to a string of bits
-def getBits(str):
-	binary = ""
-	for byte in str:
-		b = bin(ord(byte))[2:]
-		while len(b) < 8:
-			b = "0" + b
-		binary += b
-	return binary
-
-
-#convert a string of bits to bytes
-def getBytes(binary):
-	b = ""
-	for i in range(0, len(binary), 8):
-		b += unichr(int("0b" + binary[i:i+8], 2))
-	return b
-
-
 #returns a permutation of the bits according to the array permutation
 def permuteBits(bits, permutation):
 	newString = ""
@@ -171,10 +152,7 @@ def toy_des(data, key, direction):
 
 
 #Input any amount of plaintext and returns the cyphertext
-def encrypt(data, key):
-	#convert to binary data
-	plaintext = getBits(data)
-
+def encrypt(plaintext, key):
 	cyphertext = ""
 	#loop through bits and encrypt 8-bit blocks at a time
 	for i in range(0, len(plaintext), 8):
@@ -189,6 +167,5 @@ def decrypt(cyphertext, key):
 	for i in range(0, len(cyphertext), 8):
 		plaintext += toy_des(cyphertext[i:i+8], key, "DECRYPT")
 
-	data = getBytes(plaintext)
-	return data
+	return plaintext
 
