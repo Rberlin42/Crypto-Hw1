@@ -20,9 +20,12 @@ def getBytes(binary):
 		hexi = "0" + hexi
 	return bytes.fromhex(hexi)
 
+#returns true if key is valid, false otherwise
 def checkKey(key):
+	#check length
 	if len(key) != 10:
 		return False
+	#check that it's binary
 	for b in key:
 		if b != "0" and b != "1":
 			return False
@@ -45,6 +48,7 @@ def getCommand():
 		sock.listen(1)
 		print("Listening for connections on", port)
 		recvFile(key)
+
 	elif command == "SEND":
 		#get the file
 		filename = input("file: ")
@@ -54,7 +58,7 @@ def getCommand():
 			print ("Could not open file:", filename)
 			return
 
-		#Get address
+		#Get address of destination
 		ip = input("IP: ")
 		port = int(input("Port: "))
 
@@ -64,24 +68,24 @@ def getCommand():
 		except:
 			print("Unable to connect")
 			return
-
+		#send the file
 		sendFile(file, key)
+
 	else:
 		print("Invalid Command")
 		return
 
-#sets up a connection, encrypts the file and sends to the
-#given address
+#Ecrypts and sends the file
 def sendFile(file, key):
 	#Send name of file first
-	#ENCRYPT
 	cypher = des.encrypt(getBits(bytes(file.name, "utf-8")), key)
 	sock.sendall(getBytes(cypher))
 
-	#Wait for acknowledgement
+	#Wait for acknowledgement 
 	ack = sock.recv(1024)
 	if ack != b'ACK': 
 		sendFile(file, key)
+		return
 
 	#Send the rest
 	data = file.read(1024)
@@ -90,6 +94,7 @@ def sendFile(file, key):
 		cypher = des.encrypt(getBits(data), key)
 		sock.sendall(getBytes(cypher))
 		data = file.read(1024)
+	file.close()
 	print("Complete")
 
 #listens on a port for a connection

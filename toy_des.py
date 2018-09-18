@@ -6,7 +6,7 @@ P10to8 = [6, 3, 7, 4, 8, 5, 10, 9]
 P4expansion = [4, 1, 2, 3, 2, 3, 4, 1]
 P4 = [2, 4, 3, 1]
 
-#S-Box
+#S-Boxes
 S0 = [["01", "00", "11", "10"],
 	  ["11", "10", "01", "00"],
 	  ["00", "10", "01", "11"],
@@ -160,7 +160,7 @@ def encrypt(plaintext, key):
 
 	return cyphertext
 
-#takes input of binary cyphertext and returns plaintext in bytes
+#takes input of binary cyphertext and returns plaintext
 def decrypt(cyphertext, key):
 	#loop through bits and decrypt 8-bit blocks at a time
 	plaintext = ""
