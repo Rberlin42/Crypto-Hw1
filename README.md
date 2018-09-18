@@ -21,15 +21,12 @@ TCP, received, and finally decrypted. This program will work on any type of file
 My program is split into two different files: one being the toy DES implementation (toy_des.py), and the other being the program to
 send and receive files over TCP, encrypting on one end and decrypting on the other (file_transfer.py).  I began working in Python 2, but later converted
 to python 3 to make use of the bytes object.  I found this to be much easier to use when having to read/write files in bytes, and then
-having to do all the encryption\decryption in bits.  The program will read data from the file, encrypt, and send data 1024 bytes at a time.  
-The toy DES implementation is a simplified version of DES that encrypts bits in 8-bit blocks, using a 10-bit key, and only goes through 2 
-rounds as opposed to 16. My implementation has two functions `encrypt` and `decrypt` that take in any amout of bits and returns the 
-cyphertext/plaintext.  These both call one main function, `toy_des`, which accepts an 8-bit block and will either encrypt or decrypt it.  
-In addidtion, there are also several helper functions to aid in computing the encryption and decryption.  The permutations and S-boxes are 
+having to do all the encryption\decryption in bits.  The program will read data from the file, encrypt, and send data 1024 bytes at a time. The toy DES implementation is a simplified version of DES that encrypts bits in 8-bit blocks, using a 10-bit key, and only goes through 2
+rounds as opposed to 16. My implementation has two functions `encrypt` and `decrypt` that take in any amout of bits and returns the
+cyphertext/plaintext.  These both call one main function, `toy_des`, which accepts an 8-bit block and will either encrypt or decrypt it. In addidtion, there are also several helper functions to aid in computing the encryption and decryption. The permutations and S-boxes are
 hard coded in for this implementation as well.
 
 The `toy_des` function begins by generating the subkeys for each round from the key provided by the user.  The order of which key is used
 during which round depends on if we are encrypting or decrypting.  It then computes the initial permutation and splits the bits into left 
 and right.  From there it will compute both rounds of encryption\decryption using the F and XOR functions, and finally it will inverse
 the initial permutation and return the cyphertext\plaintext.
-	
